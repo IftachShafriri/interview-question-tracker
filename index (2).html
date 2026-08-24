@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <title>מעקב שאלות לראיונות</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --surface: #ffffff;
+      --surface-2: #f1f4f9;
+      --text: #182033;
+      --muted: #667085;
+      --border: #dfe4ec;
+      --primary: #3157d5;
+      --primary-hover: #2849b7;
+      --primary-soft: #e9eeff;
+      --success: #16865c;
+      --success-soft: #e8f8f1;
+      --warning: #a96300;
+      --warning-soft: #fff4dc;
+      --danger: #c13c3c;
+      --danger-soft: #ffeded;
+      --shadow: 0 12px 34px rgba(26, 37, 64, 0.08);
+      --radius: 18px;
+      --radius-sm: 12px;
+      --difficulty-low: #23885f;
+      --difficulty-mid: #b57600;
+      --difficulty-high: #c65335;
+      --difficulty-max: #9b2c72;
+    }
+
+    html[data-theme="dark"] {
+      --bg: #10131a;
+      --surface: #171b24;
+      --surface-2: #202631;
+      --text: #edf1f7;
+      --muted: #a7b0c0;
+      --border: #303847;
+      --primary: #7e9bff;
+      --primary-hover: #9fb3ff;
+      --primary-soft: #222f59;
+      --success: #66d5aa;
+      --success-soft: #173d31;
+      --warning: #f0b95d;
+      --warning-soft: #47361a;
+      --danger: #ff8585;
+      --danger-soft: #4a2428;
+      --shadow: 0 12px 34px rgba(0, 0, 0, 0.24);
+      --difficulty-low: #5fcca1;
+      --difficulty-mid: #edbb63;
+      --difficulty-high: #ef8d73;
+      --difficulty-max: #e891c8;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: inherit; }
+
+    .app-shell { max-width: 1320px; margin: 0 auto; padding: 22px; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      margin-bottom: 20px;
+    }
+    .brand h1 { margin: 0; font-size: clamp(1.45rem, 3vw, 2rem); }
+    .brand p { margin: 4px 0 0; color: var(--muted); font-size: .95rem; }
+    .top-actions { display: flex; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .btn {
+      border: 1px solid var(--border); background: var(--surface); color: var(--text);
+      padding: 10px 14px; border-radius: 12px; font-weight: 700; transition: .18s ease;
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 5px 16px rgba(0,0,0,.08); }
+    .btn-primary { background: var(--primary); color: white; border-color: transparent; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    html[data-theme="dark"] .btn-primary { color: #0b1020; }
+    .btn-danger { color: var(--danger); background: var(--danger-soft); border-color: transparent; }
+    .btn-success { color: var(--success); background: var(--success-soft); border-color: transparent; }
+    .btn-sm { padding: 7px 10px; font-size: .88rem; border-radius: 10px; }
+    .icon-btn { width: 42px; height: 42px; padding: 0; font-size: 1.15rem; }
+
+    .dashboard {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 13px;
+      margin-bottom: 14px;
+    }
+    .stat-card, .panel {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+    }
+    .stat-card { padding: 17px; }
+    .stat-label { color: var(--muted); font-size: .88rem; margin-bottom: 6px; }
+    .stat-value { font-size: 1.75rem; font-weight: 800; line-height: 1.15; }
+    .stat-sub { margin-top: 5px; color: var(--muted); font-size: .82rem; }
+
+    .progress-panel { padding: 16px 18px; margin-bottom: 14px; }
+    .progress-head { display: flex; justify-content: space-between; gap: 12px; align-items: center; margin-bottom: 10px; }
+    .progress-title { font-weight: 800; }
+    .progress-track { height: 12px; background: var(--surface-2); border-radius: 999px; overflow: hidden; border: 1px solid var(--border); }
+    .progress-fill { height: 100%; width: 0; background: var(--success); border-radius: inherit; transition: width .25s ease; }
+    .mini-stats { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .mini-chip { background: var(--surface-2); border: 1px solid var(--border); padding: 6px 9px; border-radius: 999px; font-size: .82rem; color: var(--muted); }
+
+    .controls { padding: 16px; margin-bottom: 14px; }
+    .controls-grid {
+      display: grid; grid-template-columns: minmax(230px, 2fr) repeat(4, minmax(150px, 1fr)); gap: 10px;
+      align-items: end;
+    }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: .84rem; color: var(--muted); font-weight: 700; }
+    .input, select, textarea {
+      width: 100%; border: 1px solid var(--border); border-radius: 11px; padding: 10px 11px;
+      background: var(--surface); color: var(--text); outline: none;
+    }
+    .input:focus, select:focus, textarea:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-soft); }
+    textarea { min-height: 95px; resize: vertical; }
+    .search-wrap { position: relative; }
+    .search-wrap .input { padding-right: 37px; }
+    .search-icon { position: absolute; right: 12px; bottom: 10px; color: var(--muted); pointer-events: none; }
+
+    .list-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 18px 2px 10px; }
+    .list-head h2 { margin: 0; font-size: 1.15rem; }
+    .list-count { color: var(--muted); font-size: .9rem; }
+    .questions { display: grid; gap: 11px; }
+    .question-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow);
+      padding: 16px; display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 15px; align-items: start;
+      position: relative; overflow: hidden;
+    }
+    .question-card.done { border-color: color-mix(in srgb, var(--success) 45%, var(--border)); background: color-mix(in srgb, var(--success-soft) 45%, var(--surface)); }
+    .question-card.done::before { content: ""; position: absolute; right: 0; top: 0; bottom: 0; width: 5px; background: var(--success); }
+    .question-card:hover { border-color: color-mix(in srgb, var(--primary) 45%, var(--border)); }
+    .status-toggle {
+      width: 42px; height: 42px; border-radius: 13px; border: 2px solid var(--border); background: var(--surface-2); color: var(--muted);
+      font-weight: 900; font-size: 1.15rem; display: grid; place-items: center;
+    }
+    .status-toggle.done { background: var(--success); color: white; border-color: var(--success); }
+    .q-main { min-width: 0; }
+    .q-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 5px; }
+    .q-code { font-weight: 900; font-size: 1.08rem; color: var(--primary); }
+    .q-title { font-size: 1.03rem; font-weight: 800; margin: 0 0 8px; overflow-wrap: anywhere; }
+    .q-title.empty { color: var(--muted); font-style: italic; font-weight: 600; }
+    .badges { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+    .badge { display: inline-flex; align-items: center; gap: 4px; border-radius: 999px; padding: 4px 8px; font-size: .79rem; font-weight: 700; background: var(--surface-2); border: 1px solid var(--border); }
+    .badge-success { background: var(--success-soft); color: var(--success); border-color: transparent; }
+    .badge-warning { background: var(--warning-soft); color: var(--warning); border-color: transparent; }
+    .difficulty { font-weight: 900; }
+    .difficulty.low { color: var(--difficulty-low); }
+    .difficulty.mid { color: var(--difficulty-mid); }
+    .difficulty.high { color: var(--difficulty-high); }
+    .difficulty.max { color: var(--difficulty-max); }
+    .q-notes { color: var(--muted); font-size: .9rem; overflow-wrap: anywhere; }
+    .duplicate-line { color: var(--muted); font-size: .87rem; margin-top: 6px; }
+    .duplicate-code { color: var(--primary); font-weight: 800; }
+    .q-actions { display: flex; gap: 7px; flex-wrap: wrap; justify-content: flex-end; max-width: 190px; }
+
+    .empty-state { text-align: center; padding: 42px 20px; color: var(--muted); background: var(--surface); border: 1px dashed var(--border); border-radius: var(--radius); }
+    .empty-state .emoji { font-size: 2rem; margin-bottom: 8px; }
+
+    .modal-backdrop {
+      position: fixed; inset: 0; background: rgba(7, 10, 18, .58); z-index: 1000; display: none;
+      align-items: center; justify-content: center; padding: 18px;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      width: min(720px, 100%); max-height: 92vh; overflow: auto; background: var(--surface); color: var(--text);
+      border-radius: 20px; border: 1px solid var(--border); box-shadow: 0 24px 80px rgba(0,0,0,.28);
+    }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 17px 18px; border-bottom: 1px solid var(--border); position: sticky; top: 0; background: var(--surface); z-index: 2; }
+    .modal-header h3 { margin: 0; }
+    .modal-body { padding: 18px; }
+    .modal-footer { display: flex; justify-content: flex-start; gap: 9px; padding: 14px 18px 18px; border-top: 1px solid var(--border); }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 13px; }
+    .field.full { grid-column: 1 / -1; }
+    .required::after { content: " *"; color: var(--danger); }
+    .help { color: var(--muted); font-size: .79rem; margin-top: 2px; }
+    .error-text { color: var(--danger); font-size: .83rem; min-height: 1.2em; }
+    .checkbox-row { display: flex; align-items: center; gap: 9px; padding: 9px 0; }
+    .checkbox-row input { width: 19px; height: 19px; accent-color: var(--success); }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 11px; }
+    .detail-box { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 11px; }
+    .detail-box.full { grid-column: 1/-1; }
+    .detail-label { color: var(--muted); font-size: .78rem; margin-bottom: 4px; }
+    .detail-value { white-space: pre-wrap; overflow-wrap: anywhere; }
+
+    .toast-wrap { position: fixed; left: 18px; bottom: 18px; z-index: 2000; display: grid; gap: 8px; max-width: min(360px, calc(100vw - 36px)); }
+    .toast { background: var(--surface); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 11px 13px; box-shadow: var(--shadow); animation: slideIn .18s ease; }
+    .toast.success { border-right: 4px solid var(--success); }
+    .toast.error { border-right: 4px solid var(--danger); }
+    @keyframes slideIn { from { transform: translateY(8px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+
+    .cloud-btn { min-width: 128px; }
+    .cloud-dot {
+      width: 9px; height: 9px; border-radius: 50%; background: var(--muted);
+      display: inline-block; flex: 0 0 auto;
+    }
+    .cloud-dot.online { background: var(--success); box-shadow: 0 0 0 3px var(--success-soft); }
+    .cloud-dot.syncing { background: var(--warning); box-shadow: 0 0 0 3px var(--warning-soft); }
+    .cloud-dot.error { background: var(--danger); box-shadow: 0 0 0 3px var(--danger-soft); }
+    .auth-note {
+      background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px;
+      padding: 11px 12px; color: var(--muted); font-size: .88rem; margin-bottom: 14px;
+    }
+    .auth-user {
+      background: var(--success-soft); color: var(--success); border-radius: 12px;
+      padding: 10px 12px; font-weight: 800; overflow-wrap: anywhere; margin-bottom: 14px;
+    }
+    .auth-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .auth-actions .btn { flex: 1 1 150px; }
+    .sync-meta { color: var(--muted); font-size: .82rem; margin-top: 8px; }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+    @media (max-width: 980px) {
+      .dashboard { grid-template-columns: repeat(2, 1fr); }
+      .controls-grid { grid-template-columns: 1fr 1fr; }
+      .search-field { grid-column: 1 / -1; }
+    }
+    @media (max-width: 680px) {
+      .app-shell { padding: 13px; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+      .top-actions { width: 100%; justify-content: stretch; }
+      .top-actions .btn { flex: 1 1 auto; }
+      .dashboard { grid-template-columns: repeat(2, 1fr); gap: 9px; }
+      .stat-card { padding: 13px; }
+      .stat-value { font-size: 1.45rem; }
+      .controls-grid, .form-grid, .detail-grid { grid-template-columns: 1fr; }
+      .field.full, .detail-box.full { grid-column: auto; }
+      .question-card { grid-template-columns: auto minmax(0, 1fr); gap: 11px; }
+      .q-actions { grid-column: 1 / -1; width: 100%; max-width: none; justify-content: stretch; }
+      .q-actions .btn { flex: 1; }
+      .modal-backdrop { padding: 9px; }
+      .modal { max-height: 96vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell" id="appShell">
+    <header class="topbar">
+      <div class="brand">
+        <h1>מעקב שאלות לראיונות</h1>
+        <p>כל השאלות, הקושי, ההתקדמות והכפילויות — במקום אחד.</p>
+      </div>
+      <div class="top-actions">
+        <button class="btn btn-primary" id="addBtn">＋ הוספת שאלה</button>
+        <button class="btn" id="exportBtn">ייצוא נתונים</button>
+        <button class="btn" id="importBtn">ייבוא נתונים</button>
+        <button class="btn cloud-btn" id="cloudBtn" title="חשבון וסנכרון"><span class="cloud-dot" id="cloudDot"></span><span id="cloudStatusText">לא מחובר</span></button>
+        <input class="sr-only" type="file" id="importFile" accept="application/json,.json" />
+        <button class="btn icon-btn" id="themeBtn" aria-label="מעבר למצב כהה" title="מצב כהה">🌙</button>
+      </div>
+    </header>
+
+    <section class="dashboard" aria-label="סטטיסטיקות">
+      <div class="stat-card"><div class="stat-label">סה״כ שאלות</div><div class="stat-value" id="totalStat">0</div><div class="stat-sub">רשומות במאגר</div></div>
+      <div class="stat-card"><div class="stat-label">בוצעו</div><div class="stat-value" id="doneStat">0</div><div class="stat-sub">שאלות שסומנו כהושלמו</div></div>
+      <div class="stat-card"><div class="stat-label">לא בוצעו</div><div class="stat-value" id="pendingStat">0</div><div class="stat-sub">נשארו לתרגול</div></div>
+      <div class="stat-card"><div class="stat-label">התקדמות</div><div class="stat-value" id="percentStat">0%</div><div class="stat-sub" id="progressText">0 מתוך 0 הושלמו</div></div>
+    </section>
+
+    <section class="panel progress-panel">
+      <div class="progress-head"><span class="progress-title">התקדמות כללית</span><span id="progressPercent">0%</span></div>
+      <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="mini-stats" id="miniStats"></div>
+    </section>
+
+    <section class="panel controls" aria-label="חיפוש וסינון">
+      <div class="controls-grid">
+        <div class="field search-field">
+          <label for="searchInput">חיפוש</label>
+          <div class="search-wrap">
+            <input class="input" id="searchInput" placeholder="מספר, תיאור, הערה, קטגוריה או קוד זהה..." autocomplete="off" />
+            <span class="search-icon">⌕</span>
+          </div>
+        </div>
+        <div class="field">
+          <label for="statusFilter">סטטוס</label>
+          <select id="statusFilter"><option value="all">הכול</option><option value="done">בוצעו</option><option value="pending">לא בוצעו</option></select>
+        </div>
+        <div class="field">
+          <label for="difficultyFilter">רמת קושי</label>
+          <select id="difficultyFilter"><option value="all">הכול</option><option value="1-3">1–3</option><option value="4-6">4–6</option><option value="7-8">7–8</option><option value="9-10">9–10</option></select>
+        </div>
+        <div class="field">
+          <label for="categoryFilter">קטגוריה</label>
+          <select id="categoryFilter"><option value="all">כל הקטגוריות</option></select>
+        </div>
+        <div class="field">
+          <label for="sortSelect">מיון</label>
+          <select id="sortSelect">
+            <option value="code-asc">מספר שאלה</option>
+            <option value="difficulty-asc">קושי: קל לקשה</option>
+            <option value="difficulty-desc">קושי: קשה לקל</option>
+            <option value="status-pending">לא בוצעו קודם</option>
+            <option value="status-done">בוצעו קודם</option>
+            <option value="created-desc">תאריך הוספה: חדש קודם</option>
+            <option value="updated-desc">עדכון אחרון: חדש קודם</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:9px;flex-wrap:wrap;margin-top:11px;align-items:center;">
+        <label class="checkbox-row" style="padding:0;"><input type="checkbox" id="duplicatesOnly" /> רק שאלות שחוזרות על עצמן</label>
+        <button class="btn btn-sm" id="clearFiltersBtn">ניקוי סינון</button>
+      </div>
+    </section>
+
+    <div class="list-head"><h2>השאלות שלי</h2><div class="list-count" id="listCount">0 שאלות</div></div>
+    <main class="questions" id="questionsList"></main>
+  </div>
+
+  <div class="modal-backdrop" id="formModal" role="dialog" aria-modal="true" aria-labelledby="formTitle">
+    <div class="modal">
+      <div class="modal-header"><h3 id="formTitle">הוספת שאלה</h3><button class="btn icon-btn" data-close="formModal" aria-label="סגירה">✕</button></div>
+      <form id="questionForm" novalidate>
+        <div class="modal-body">
+          <div class="form-grid">
+            <div class="field">
+              <label class="required" for="qCode">מספר שאלה / קוד שאלה</label>
+              <input class="input" id="qCode" maxlength="80" required placeholder="למשל 93" />
+              <div class="error-text" id="codeError"></div>
+            </div>
+            <div class="field">
+              <label for="qDifficulty">רמת קושי</label>
+              <select id="qDifficulty"></select>
+            </div>
+            <div class="field full">
+              <label for="qText">מה השאלה</label>
+              <input class="input" id="qText" maxlength="500" placeholder="למשל: בניית XOR באמצעות רכיבי Tri-State" />
+            </div>
+            <div class="field">
+              <label for="qCategory">נושא / קטגוריה</label>
+              <input class="input" id="qCategory" list="categoryOptions" maxlength="100" placeholder="בחרי או הקלידי קטגוריה חדשה" />
+              <datalist id="categoryOptions"></datalist>
+            </div>
+            <div class="field">
+              <label>סטטוס</label>
+              <label class="checkbox-row"><input type="checkbox" id="qDone" /> בוצעה</label>
+            </div>
+            <div class="field full">
+              <label for="qDuplicates">שאלות זהות / חוזרות</label>
+              <input class="input" id="qDuplicates" placeholder="למשל: 127, 215, 340" />
+              <div class="help">אפשר להפריד בפסיקים. אם הקוד כבר קיים, הקישור יעודכן אוטומטית גם בצד השני. גם קודים שטרם הוספת נשמרים.</div>
+            </div>
+            <div class="field full">
+              <label for="qNotes">הערות</label>
+              <textarea id="qNotes" maxlength="5000" placeholder="דגשים, דברים לחזור עליהם, דרך פתרון, חברה רלוונטית..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" type="submit" id="saveBtn">שמירה</button>
+          <button class="btn" type="button" data-close="formModal">ביטול</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="detailModal" role="dialog" aria-modal="true" aria-labelledby="detailTitle">
+    <div class="modal">
+      <div class="modal-header"><h3 id="detailTitle">פרטי שאלה</h3><button class="btn icon-btn" data-close="detailModal" aria-label="סגירה">✕</button></div>
+      <div class="modal-body" id="detailContent"></div>
+      <div class="modal-footer"><button class="btn btn-primary" id="detailEditBtn">עריכה</button><button class="btn" data-close="detailModal">סגירה</button></div>
+    </div>
+  </div>
+
+
+  <div class="modal-backdrop" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="modal" style="width:min(560px,100%)">
+      <div class="modal-header">
+        <h3 id="authTitle">חשבון וסנכרון לענן</h3>
+        <button class="btn icon-btn" data-close="authModal" aria-label="סגירה">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="loggedOutAuth">
+          <div class="auth-note">
+            התחברות מאפשרת לשמור את השאלות ב-Supabase ולפתוח את אותו מידע מהמחשב ומהטלפון.
+            בלי התחברות האתר ממשיך לעבוד מקומית בדפדפן.
+          </div>
+          <div class="form-grid">
+            <div class="field full">
+              <label for="authEmail">אימייל</label>
+              <input class="input" id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" />
+            </div>
+            <div class="field full">
+              <label for="authPassword">סיסמה</label>
+              <input class="input" id="authPassword" type="password" autocomplete="current-password" minlength="6" placeholder="הסיסמה שלך" />
+            </div>
+          </div>
+          <div class="error-text" id="authError" style="margin-top:8px"></div>
+          <div class="auth-actions" style="margin-top:8px">
+            <button class="btn btn-primary" id="loginBtn" type="button">התחברות</button>
+            <button class="btn" id="signupBtn" type="button">יצירת חשבון</button>
+            <button class="btn" id="resetBtn" type="button">שכחתי סיסמה</button>
+          </div>
+        </div>
+
+        <div id="loggedInAuth" hidden>
+          <div class="auth-user">מחובר/ת כ־<span id="authUserEmail"></span></div>
+          <div class="auth-note">
+            כל שינוי נשמר קודם מקומית ומסתנכרן אוטומטית לענן. כשפותחים את האתר במכשיר אחר ומתחברים לאותו חשבון, הנתונים נטענים משם.
+          </div>
+          <div class="auth-actions">
+            <button class="btn btn-primary" id="syncNowBtn" type="button">סנכרון עכשיו</button>
+            <button class="btn" id="showPasswordChangeBtn" type="button">הגדרת / שינוי סיסמה</button>
+            <button class="btn btn-danger" id="logoutBtn" type="button">התנתקות</button>
+          </div>
+          <div id="passwordChangeArea" hidden style="margin-top:14px">
+            <div class="field">
+              <label for="newPassword">סיסמה חדשה</label>
+              <input class="input" id="newPassword" type="password" minlength="6" autocomplete="new-password" placeholder="לפחות 6 תווים" />
+            </div>
+            <button class="btn btn-primary" id="changePasswordBtn" type="button" style="margin-top:9px">שמירת סיסמה חדשה</button>
+          </div>
+          <div class="error-text" id="accountError" style="margin-top:8px"></div>
+          <div class="sync-meta" id="syncMeta"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap" aria-live="polite"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+(() => {
+  'use strict';
+
+  const STORAGE_KEY = 'interviewQuestionTracker.v1';
+  const THEME_KEY = 'interviewQuestionTracker.theme';
+  const SUPABASE_URL = 'https://uqwatizhshlebhzhechk.supabase.co';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KCHThLQGWM94QJFsip54BQ_uG1oXcHt';
+  const CLOUD_POLL_MS = 10000;
+  const defaultCategories = ['לוגיקה ספרתית','Verilog','SystemVerilog','FSM','Flip-Flops','DFT','Scan Chain','תזמונים','Verification','Computer Architecture','Algorithms','אחר'];
+  let questions = [];
+  let editingCode = null;
+  let detailCode = null;
+  let localSavedAt = null;
+  let supabaseClient = null;
+  let currentUser = null;
+  let syncTimer = null;
+  let pollTimer = null;
+  let cloudBusy = false;
+  let applyingCloud = false;
+  let lastCloudUpdatedAt = null;
+
+  const $ = (id) => document.getElementById(id);
+  const els = {
+    addBtn: $('addBtn'), exportBtn: $('exportBtn'), importBtn: $('importBtn'), importFile: $('importFile'), themeBtn: $('themeBtn'),
+    cloudBtn: $('cloudBtn'), cloudDot: $('cloudDot'), cloudStatusText: $('cloudStatusText'),
+    totalStat: $('totalStat'), doneStat: $('doneStat'), pendingStat: $('pendingStat'), percentStat: $('percentStat'), progressText: $('progressText'), progressPercent: $('progressPercent'), progressFill: $('progressFill'), miniStats: $('miniStats'),
+    searchInput: $('searchInput'), statusFilter: $('statusFilter'), difficultyFilter: $('difficultyFilter'), categoryFilter: $('categoryFilter'), sortSelect: $('sortSelect'), duplicatesOnly: $('duplicatesOnly'), clearFiltersBtn: $('clearFiltersBtn'),
+    listCount: $('listCount'), questionsList: $('questionsList'),
+    formModal: $('formModal'), formTitle: $('formTitle'), questionForm: $('questionForm'), qCode: $('qCode'), qText: $('qText'), qDifficulty: $('qDifficulty'), qCategory: $('qCategory'), categoryOptions: $('categoryOptions'), qDone: $('qDone'), qDuplicates: $('qDuplicates'), qNotes: $('qNotes'), codeError: $('codeError'),
+    detailModal: $('detailModal'), detailTitle: $('detailTitle'), detailContent: $('detailContent'), detailEditBtn: $('detailEditBtn'), toastWrap: $('toastWrap'),
+    authModal: $('authModal'), loggedOutAuth: $('loggedOutAuth'), loggedInAuth: $('loggedInAuth'), authEmail: $('authEmail'), authPassword: $('authPassword'),
+    authError: $('authError'), loginBtn: $('loginBtn'), signupBtn: $('signupBtn'), resetBtn: $('resetBtn'),
+    authUserEmail: $('authUserEmail'), syncNowBtn: $('syncNowBtn'), showPasswordChangeBtn: $('showPasswordChangeBtn'),
+    passwordChangeArea: $('passwordChangeArea'), newPassword: $('newPassword'), changePasswordBtn: $('changePasswordBtn'),
+    logoutBtn: $('logoutBtn'), accountError: $('accountError'), syncMeta: $('syncMeta')
+  };
+
+  function nowIso() { return new Date().toISOString(); }
+  function cleanCode(value) { return String(value ?? '').trim(); }
+  function uniq(arr) { return [...new Set(arr)]; }
+  function parseDuplicateCodes(value, ownCode = '') {
+    const normalizedOwn = cleanCode(ownCode);
+    return uniq(String(value || '').split(/[,;\n]+/).map(cleanCode).filter(Boolean).filter(c => c !== normalizedOwn));
+  }
+  function safeText(v) { return String(v ?? ''); }
+  function escapeHtml(str) {
+    return safeText(str).replace(/[&<>'"]/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[ch]));
+  }
+  function truncate(str, n = 150) {
+    const s = safeText(str).trim();
+    return s.length > n ? s.slice(0, n).trimEnd() + '…' : s;
+  }
+  function compareCodes(a, b) {
+    return safeText(a).localeCompare(safeText(b), 'he', { numeric: true, sensitivity: 'base' });
+  }
+  function getQuestion(code) { return questions.find(q => q.code === cleanCode(code)); }
+  function sanitizeQuestion(raw) {
+    const createdAt = raw?.createdAt && !Number.isNaN(Date.parse(raw.createdAt)) ? raw.createdAt : nowIso();
+    const updatedAt = raw?.updatedAt && !Number.isNaN(Date.parse(raw.updatedAt)) ? raw.updatedAt : createdAt;
+    return {
+      code: cleanCode(raw?.code),
+      text: safeText(raw?.text).trim(),
+      difficulty: Math.max(1, Math.min(10, Number(raw?.difficulty) || 5)),
+      category: safeText(raw?.category).trim(),
+      done: Boolean(raw?.done),
+      duplicateCodes: uniq((Array.isArray(raw?.duplicateCodes) ? raw.duplicateCodes : []).map(cleanCode).filter(Boolean)).filter(c => c !== cleanCode(raw?.code)),
+      notes: safeText(raw?.notes).trim(),
+      createdAt,
+      updatedAt
+    };
+  }
+
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) { localSavedAt = null; return []; }
+      const parsed = JSON.parse(raw);
+      const list = Array.isArray(parsed) ? parsed : parsed.questions;
+      localSavedAt = parsed && !Array.isArray(parsed) && parsed.savedAt ? parsed.savedAt : null;
+      if (!Array.isArray(list)) return [];
+      const cleaned = list.map(sanitizeQuestion).filter(q => q.code);
+      const seen = new Set();
+      return cleaned.filter(q => !seen.has(q.code) && seen.add(q.code));
+    } catch (err) {
+      console.error('Failed to load data', err);
+      localSavedAt = null;
+      return [];
+    }
+  }
+
+  function saveLocalOnly(savedAt = nowIso()) {
+    localSavedAt = savedAt;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ version: 1, savedAt: localSavedAt, questions }));
+  }
+
+  function saveData() {
+    saveLocalOnly();
+    if (!applyingCloud) scheduleCloudSave();
+  }
+
+
+  function cloudPayload() {
+    return { version: 1, savedAt: localSavedAt || nowIso(), questions: questions.map(sanitizeQuestion) };
+  }
+
+  function setCloudStatus(state, text) {
+    if (!els.cloudDot || !els.cloudStatusText) return;
+    els.cloudDot.className = `cloud-dot${state ? ' ' + state : ''}`;
+    els.cloudStatusText.textContent = text;
+  }
+
+  function formatSyncTime(iso) {
+    if (!iso) return 'עדיין לא בוצע סנכרון';
+    try { return `סנכרון אחרון: ${new Date(iso).toLocaleString('he-IL')}`; }
+    catch { return 'סנכרון בוצע'; }
+  }
+
+  function updateAuthUI() {
+    const loggedIn = Boolean(currentUser);
+    els.loggedOutAuth.hidden = loggedIn;
+    els.loggedInAuth.hidden = !loggedIn;
+    if (loggedIn) {
+      els.authUserEmail.textContent = currentUser.email || currentUser.id;
+      els.syncMeta.textContent = formatSyncTime(lastCloudUpdatedAt);
+      if (!cloudBusy) setCloudStatus('online', 'מסונכרן');
+    } else {
+      setCloudStatus('', 'לא מחובר');
+    }
+  }
+
+  function scheduleCloudSave() {
+    if (!currentUser || !supabaseClient) return;
+    clearTimeout(syncTimer);
+    setCloudStatus('syncing', 'שומר...');
+    syncTimer = setTimeout(() => pushCloudData().catch(err => {
+      console.error(err);
+      setCloudStatus('error', 'שגיאת סנכרון');
+    }), 450);
+  }
+
+  async function pushCloudData() {
+    if (!currentUser || !supabaseClient || cloudBusy) return;
+    cloudBusy = true;
+    setCloudStatus('syncing', 'שומר...');
+    try {
+      const payload = cloudPayload();
+      const updatedAt = nowIso();
+      const { error } = await supabaseClient
+        .from('user_data')
+        .upsert({ user_id: currentUser.id, data: payload, updated_at: updatedAt }, { onConflict: 'user_id' });
+      if (error) throw error;
+      lastCloudUpdatedAt = updatedAt;
+      setCloudStatus('online', 'מסונכרן');
+      els.syncMeta.textContent = formatSyncTime(lastCloudUpdatedAt);
+    } catch (err) {
+      console.error('Cloud save failed', err);
+      setCloudStatus('error', 'שגיאת סנכרון');
+      els.accountError.textContent = `שגיאת סנכרון: ${err.message || err}`;
+      throw err;
+    } finally {
+      cloudBusy = false;
+    }
+  }
+
+  async function fetchCloudRow() {
+    if (!currentUser || !supabaseClient) return null;
+    const { data, error } = await supabaseClient
+      .from('user_data')
+      .select('data,updated_at')
+      .eq('user_id', currentUser.id)
+      .maybeSingle();
+    if (error) throw error;
+    return data || null;
+  }
+
+  function applyCloudPayload(payload, cloudUpdatedAt = null) {
+    const list = Array.isArray(payload) ? payload : payload?.questions;
+    if (!Array.isArray(list)) return false;
+    applyingCloud = true;
+    try {
+      questions = list.map(sanitizeQuestion).filter(q => q.code);
+      ensureBidirectionalLinks();
+      const savedAt = payload?.savedAt || cloudUpdatedAt || nowIso();
+      saveLocalOnly(savedAt);
+      renderAll();
+      return true;
+    } finally {
+      applyingCloud = false;
+    }
+  }
+
+  function ts(iso) {
+    const value = iso ? Date.parse(iso) : 0;
+    return Number.isFinite(value) ? value : 0;
+  }
+
+  async function syncWithCloud({ forcePull = false } = {}) {
+    if (!currentUser || !supabaseClient || cloudBusy) return;
+    cloudBusy = true;
+    setCloudStatus('syncing', 'מסנכרן...');
+    els.accountError.textContent = '';
+    try {
+      const row = await fetchCloudRow();
+      if (!row) {
+        // First connection: preserve anything already stored locally by uploading it.
+        const updatedAt = nowIso();
+        const payload = cloudPayload();
+        const { error } = await supabaseClient
+          .from('user_data')
+          .upsert({ user_id: currentUser.id, data: payload, updated_at: updatedAt }, { onConflict: 'user_id' });
+        if (error) throw error;
+        lastCloudUpdatedAt = updatedAt;
+      } else {
+        lastCloudUpdatedAt = row.updated_at || row.data?.savedAt || null;
+        const cloudSavedAt = row.data?.savedAt || row.updated_at;
+        const localIsNewer = localSavedAt && ts(localSavedAt) > ts(cloudSavedAt) + 1000;
+
+        if (!forcePull && localIsNewer) {
+          const updatedAt = nowIso();
+          const { error } = await supabaseClient
+            .from('user_data')
+            .upsert({ user_id: currentUser.id, data: cloudPayload(), updated_at: updatedAt }, { onConflict: 'user_id' });
+          if (error) throw error;
+          lastCloudUpdatedAt = updatedAt;
+        } else {
+          applyCloudPayload(row.data, row.updated_at);
+        }
+      }
+      setCloudStatus('online', 'מסונכרן');
+      els.syncMeta.textContent = formatSyncTime(lastCloudUpdatedAt);
+    } catch (err) {
+      console.error('Cloud sync failed', err);
+      setCloudStatus('error', 'שגיאת סנכרון');
+      els.accountError.textContent = `שגיאת סנכרון: ${err.message || err}`;
+    } finally {
+      cloudBusy = false;
+    }
+  }
+
+  async function checkCloudForUpdates() {
+    if (!currentUser || !supabaseClient || cloudBusy || document.hidden) return;
+    try {
+      const row = await fetchCloudRow();
+      if (!row) { await pushCloudData(); return; }
+      const cloudSavedAt = row.data?.savedAt || row.updated_at;
+      if (ts(cloudSavedAt) > ts(localSavedAt) + 1000) {
+        lastCloudUpdatedAt = row.updated_at || cloudSavedAt;
+        applyCloudPayload(row.data, row.updated_at);
+        setCloudStatus('online', 'עודכן מהענן');
+        els.syncMeta.textContent = formatSyncTime(lastCloudUpdatedAt);
+      } else if (localSavedAt && ts(localSavedAt) > ts(cloudSavedAt) + 1000) {
+        await pushCloudData();
+      }
+    } catch (err) {
+      console.error('Cloud poll failed', err);
+      setCloudStatus('error', 'שגיאת סנכרון');
+    }
+  }
+
+  function startCloudPolling() {
+    clearInterval(pollTimer);
+    if (!currentUser) return;
+    pollTimer = setInterval(checkCloudForUpdates, CLOUD_POLL_MS);
+  }
+
+  function siteRedirectUrl() {
+    if (location.protocol === 'http:' || location.protocol === 'https:') {
+      return `${location.origin}${location.pathname}`;
+    }
+    return undefined;
+  }
+
+  async function signIn() {
+    const email = els.authEmail.value.trim();
+    const password = els.authPassword.value;
+    els.authError.textContent = '';
+    if (!email || !password) { els.authError.textContent = 'יש להזין אימייל וסיסמה.'; return; }
+    els.loginBtn.disabled = true;
+    try {
+      const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      currentUser = data.user;
+      updateAuthUI();
+      await syncWithCloud();
+      closeModal(els.authModal);
+      toast('התחברת והנתונים סונכרנו');
+    } catch (err) {
+      els.authError.textContent = err.message || 'ההתחברות נכשלה.';
+    } finally {
+      els.loginBtn.disabled = false;
+    }
+  }
+
+  async function signUp() {
+    const email = els.authEmail.value.trim();
+    const password = els.authPassword.value;
+    els.authError.textContent = '';
+    if (!email || !password || password.length < 6) {
+      els.authError.textContent = 'יש להזין אימייל וסיסמה של לפחות 6 תווים.';
+      return;
+    }
+    els.signupBtn.disabled = true;
+    try {
+      const options = {};
+      const redirect = siteRedirectUrl();
+      if (redirect) options.emailRedirectTo = redirect;
+      const { data, error } = await supabaseClient.auth.signUp({ email, password, options });
+      if (error) throw error;
+      if (data.session) {
+        currentUser = data.user;
+        updateAuthUI();
+        await syncWithCloud();
+        closeModal(els.authModal);
+        toast('החשבון נוצר והסנכרון פעיל');
+      } else {
+        toast('נשלח אליך מייל לאימות החשבון');
+      }
+    } catch (err) {
+      els.authError.textContent = err.message || 'יצירת החשבון נכשלה.';
+    } finally {
+      els.signupBtn.disabled = false;
+    }
+  }
+
+  async function sendPasswordReset() {
+    const email = els.authEmail.value.trim();
+    els.authError.textContent = '';
+    if (!email) { els.authError.textContent = 'יש להזין קודם את כתובת האימייל.'; return; }
+    try {
+      const redirectTo = siteRedirectUrl();
+      const { error } = await supabaseClient.auth.resetPasswordForEmail(email, redirectTo ? { redirectTo } : undefined);
+      if (error) throw error;
+      toast('נשלח אליך מייל לאיפוס סיסמה');
+    } catch (err) {
+      els.authError.textContent = err.message || 'לא ניתן לשלוח מייל איפוס.';
+    }
+  }
+
+  async function changePassword() {
+    const password = els.newPassword.value;
+    els.accountError.textContent = '';
+    if (!password || password.length < 6) {
+      els.accountError.textContent = 'הסיסמה החדשה צריכה להכיל לפחות 6 תווים.';
+      return;
+    }
+    try {
+      const { error } = await supabaseClient.auth.updateUser({ password });
+      if (error) throw error;
+      els.newPassword.value = '';
+      els.passwordChangeArea.hidden = true;
+      toast('הסיסמה עודכנה');
+    } catch (err) {
+      els.accountError.textContent = err.message || 'עדכון הסיסמה נכשל.';
+    }
+  }
+
+  async function signOut() {
+    try {
+      if (currentUser) await pushCloudData();
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) throw error;
+      currentUser = null;
+      clearInterval(pollTimer);
+      updateAuthUI();
+      closeModal(els.authModal);
+      toast('התנתקת. העותק המקומי נשאר במכשיר זה.');
+    } catch (err) {
+      els.accountError.textContent = err.message || 'ההתנתקות נכשלה.';
+    }
+  }
+
+  async function handleSession(session, { initial = false } = {}) {
+    currentUser = session?.user || null;
+    updateAuthUI();
+    startCloudPolling();
+    if (currentUser) {
+      await syncWithCloud();
+      if (!initial) toast('החשבון מחובר והסנכרון פעיל');
+    }
+  }
+
+  async function initCloud() {
+    if (!window.supabase?.createClient) {
+      setCloudStatus('error', 'הענן לא נטען');
+      console.error('Supabase client library failed to load');
+      return;
+    }
+
+    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    });
+
+    const { data, error } = await supabaseClient.auth.getSession();
+    if (error) console.error('Session load failed', error);
+    await handleSession(data?.session || null, { initial: true });
+
+    supabaseClient.auth.onAuthStateChange((event, session) => {
+      // Avoid doing network work inside the auth callback itself.
+      setTimeout(async () => {
+        if (event === 'SIGNED_OUT') {
+          currentUser = null;
+          clearInterval(pollTimer);
+          updateAuthUI();
+          return;
+        }
+        await handleSession(session, { initial: event === 'INITIAL_SESSION' });
+        if (event === 'PASSWORD_RECOVERY') {
+          openModal(els.authModal);
+          els.passwordChangeArea.hidden = false;
+          setTimeout(() => els.newPassword.focus(), 30);
+          toast('בחר סיסמה חדשה כדי להשלים את האיפוס');
+        }
+      }, 0);
+    });
+
+    window.addEventListener('online', () => syncWithCloud());
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) checkCloudForUpdates();
+    });
+  }
+
+  function ensureBidirectionalLinks() {
+    const map = new Map(questions.map(q => [q.code, q]));
+    for (const q of questions) {
+      q.duplicateCodes = uniq(q.duplicateCodes.map(cleanCode).filter(Boolean).filter(c => c !== q.code));
+    }
+    for (const q of questions) {
+      for (const code of q.duplicateCodes) {
+        const other = map.get(code);
+        if (other && !other.duplicateCodes.includes(q.code)) other.duplicateCodes.push(q.code);
+      }
+    }
+    for (const q of questions) q.duplicateCodes = uniq(q.duplicateCodes).sort(compareCodes);
+  }
+
+  function getDuplicateGroup(code) {
+    const start = cleanCode(code);
+    if (!start) return [];
+    const map = new Map(questions.map(q => [q.code, q]));
+    const adjacency = new Map();
+    const ensureNode = c => { if (!adjacency.has(c)) adjacency.set(c, new Set()); };
+    for (const q of questions) {
+      ensureNode(q.code);
+      for (const d of q.duplicateCodes) {
+        ensureNode(d);
+        adjacency.get(q.code).add(d);
+        adjacency.get(d).add(q.code);
+      }
+    }
+    if (!adjacency.has(start)) return [];
+    const visited = new Set([start]);
+    const stack = [start];
+    while (stack.length) {
+      const cur = stack.pop();
+      for (const next of adjacency.get(cur) || []) if (!visited.has(next)) { visited.add(next); stack.push(next); }
+    }
+    visited.delete(start);
+    return [...visited].sort(compareCodes).map(c => ({ code: c, exists: map.has(c), done: map.get(c)?.done || false }));
+  }
+
+  function groupHasSolvedSibling(code) {
+    return getDuplicateGroup(code).some(item => item.exists && item.done);
+  }
+
+  function difficultyClass(d) { return d <= 3 ? 'low' : d <= 6 ? 'mid' : d <= 8 ? 'high' : 'max'; }
+  function formatDate(iso) {
+    try { return new Intl.DateTimeFormat('he-IL', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso)); }
+    catch { return iso || ''; }
+  }
+
+  function getCategories() {
+    return uniq([...defaultCategories, ...questions.map(q => q.category).filter(Boolean)]).sort((a,b) => a.localeCompare(b, 'he'));
+  }
+
+  function updateCategoryControls() {
+    const cats = getCategories();
+    const selected = els.categoryFilter.value;
+    els.categoryFilter.innerHTML = '<option value="all">כל הקטגוריות</option>' + cats.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join('');
+    els.categoryFilter.value = cats.includes(selected) ? selected : 'all';
+    els.categoryOptions.innerHTML = cats.map(c => `<option value="${escapeHtml(c)}"></option>`).join('');
+  }
+
+  function getVisibleQuestions() {
+    const term = els.searchInput.value.trim().toLocaleLowerCase('he');
+    const status = els.statusFilter.value;
+    const diff = els.difficultyFilter.value;
+    const category = els.categoryFilter.value;
+    const dupOnly = els.duplicatesOnly.checked;
+
+    let list = questions.filter(q => {
+      const groupCodes = getDuplicateGroup(q.code).map(x => x.code);
+      const searchable = [q.code, q.text, q.notes, q.category, ...q.duplicateCodes, ...groupCodes].join(' ').toLocaleLowerCase('he');
+      if (term && !searchable.includes(term)) return false;
+      if (status === 'done' && !q.done) return false;
+      if (status === 'pending' && q.done) return false;
+      if (diff !== 'all') {
+        const [min,max] = diff.split('-').map(Number);
+        if (q.difficulty < min || q.difficulty > max) return false;
+      }
+      if (category !== 'all' && q.category !== category) return false;
+      if (dupOnly && getDuplicateGroup(q.code).length === 0) return false;
+      return true;
+    });
+
+    const sort = els.sortSelect.value;
+    list.sort((a,b) => {
+      if (sort === 'difficulty-asc') return a.difficulty - b.difficulty || compareCodes(a.code,b.code);
+      if (sort === 'difficulty-desc') return b.difficulty - a.difficulty || compareCodes(a.code,b.code);
+      if (sort === 'status-pending') return Number(a.done) - Number(b.done) || compareCodes(a.code,b.code);
+      if (sort === 'status-done') return Number(b.done) - Number(a.done) || compareCodes(a.code,b.code);
+      if (sort === 'created-desc') return new Date(b.createdAt) - new Date(a.createdAt);
+      if (sort === 'updated-desc') return new Date(b.updatedAt) - new Date(a.updatedAt);
+      return compareCodes(a.code,b.code);
+    });
+    return list;
+  }
+
+  function renderStats() {
+    const total = questions.length;
+    const done = questions.filter(q => q.done).length;
+    const pending = total - done;
+    const percent = total ? Math.round(done / total * 100) : 0;
+    els.totalStat.textContent = total;
+    els.doneStat.textContent = done;
+    els.pendingStat.textContent = pending;
+    els.percentStat.textContent = percent + '%';
+    els.progressText.textContent = `${done} מתוך ${total} שאלות הושלמו`;
+    els.progressPercent.textContent = percent + '%';
+    els.progressFill.style.width = percent + '%';
+
+    const ranges = [
+      ['קושי 1–3', questions.filter(q => q.difficulty <= 3).length],
+      ['קושי 4–6', questions.filter(q => q.difficulty >= 4 && q.difficulty <= 6).length],
+      ['קושי 7–8', questions.filter(q => q.difficulty >= 7 && q.difficulty <= 8).length],
+      ['קושי 9–10', questions.filter(q => q.difficulty >= 9).length]
+    ];
+    const categoryCounts = new Map();
+    questions.forEach(q => { if (q.category) categoryCounts.set(q.category, (categoryCounts.get(q.category) || 0) + 1); });
+    const topCats = [...categoryCounts.entries()].sort((a,b) => b[1]-a[1] || a[0].localeCompare(b[0],'he')).slice(0,4);
+    els.miniStats.innerHTML = [...ranges, ...topCats.map(([c,n]) => [`${c}`, n])].map(([label,n]) => `<span class="mini-chip">${escapeHtml(label)}: <strong>${n}</strong></span>`).join('');
+  }
+
+  function renderQuestions() {
+    const list = getVisibleQuestions();
+    els.listCount.textContent = `${list.length} מתוך ${questions.length} שאלות`;
+    if (!list.length) {
+      els.questionsList.innerHTML = `<div class="empty-state"><div class="emoji">📚</div><strong>${questions.length ? 'לא נמצאו שאלות שמתאימות לסינון' : 'עדיין אין שאלות'}</strong><div>${questions.length ? 'נסי לשנות את החיפוש או את הפילטרים.' : 'לחצי על “הוספת שאלה” כדי להתחיל.'}</div></div>`;
+      return;
+    }
+
+    els.questionsList.innerHTML = list.map(q => {
+      const group = getDuplicateGroup(q.code);
+      const solvedSibling = !q.done && group.some(x => x.exists && x.done);
+      const groupHtml = group.length ? group.map(x => `<span class="duplicate-code">${escapeHtml(x.code)}${x.done ? ' ✓' : ''}${x.exists ? '' : ' (טרם נוסף)'}</span>`).join(' ↔ ') : '';
+      return `
+      <article class="question-card ${q.done ? 'done' : ''}" data-card-code="${escapeHtml(q.code)}">
+        <button class="status-toggle ${q.done ? 'done' : ''}" data-action="toggle" data-code="${escapeHtml(q.code)}" title="${q.done ? 'סימון כלא בוצעה' : 'סימון כבוצעה'}" aria-label="${q.done ? 'סימון כלא בוצעה' : 'סימון כבוצעה'}">${q.done ? '✓' : '○'}</button>
+        <div class="q-main" data-action="details" data-code="${escapeHtml(q.code)}" tabindex="0" role="button" aria-label="פתיחת פרטי שאלה ${escapeHtml(q.code)}">
+          <div class="q-top"><span class="q-code">#${escapeHtml(q.code)}</span>${q.done ? '<span class="badge badge-success">בוצעה</span>' : '<span class="badge">לא בוצעה</span>'}${solvedSibling ? '<span class="badge badge-warning">כבר נפתרה דרך קוד זהה</span>' : ''}</div>
+          <div class="q-title ${q.text ? '' : 'empty'}">${escapeHtml(q.text || 'ללא תיאור')}</div>
+          <div class="badges">
+            <span class="badge">${escapeHtml(q.category || 'ללא קטגוריה')}</span>
+            <span class="badge difficulty ${difficultyClass(q.difficulty)}">קושי ${q.difficulty}/10</span>
+          </div>
+          ${group.length ? `<div class="duplicate-line"><strong>קבוצת שאלות זהות:</strong> ${groupHtml}</div>` : ''}
+          ${q.notes ? `<div class="q-notes">${escapeHtml(truncate(q.notes, 170))}</div>` : ''}
+        </div>
+        <div class="q-actions">
+          <button class="btn btn-sm" data-action="edit" data-code="${escapeHtml(q.code)}">עריכה</button>
+          <button class="btn btn-sm btn-danger" data-action="delete" data-code="${escapeHtml(q.code)}">מחיקה</button>
+        </div>
+      </article>`;
+    }).join('');
+  }
+
+  function renderAll() {
+    ensureBidirectionalLinks();
+    updateCategoryControls();
+    renderStats();
+    renderQuestions();
+  }
+
+  function openModal(el) { el.classList.add('open'); document.body.style.overflow = 'hidden'; }
+  function closeModal(el) { el.classList.remove('open'); if (![els.formModal,els.detailModal].some(m => m.classList.contains('open'))) document.body.style.overflow = ''; }
+  function toast(message, type = 'success') {
+    const div = document.createElement('div'); div.className = `toast ${type}`; div.textContent = message; els.toastWrap.appendChild(div);
+    setTimeout(() => div.remove(), 3000);
+  }
+
+  function openAddForm() {
+    editingCode = null;
+    els.formTitle.textContent = 'הוספת שאלה';
+    els.questionForm.reset();
+    els.qDifficulty.value = '5';
+    els.codeError.textContent = '';
+    openModal(els.formModal);
+    setTimeout(() => els.qCode.focus(), 30);
+  }
+
+  function openEditForm(code) {
+    const q = getQuestion(code); if (!q) return;
+    editingCode = q.code;
+    els.formTitle.textContent = `עריכת שאלה #${q.code}`;
+    els.qCode.value = q.code;
+    els.qText.value = q.text;
+    els.qDifficulty.value = String(q.difficulty);
+    els.qCategory.value = q.category;
+    els.qDone.checked = q.done;
+    els.qDuplicates.value = q.duplicateCodes.join(', ');
+    els.qNotes.value = q.notes;
+    els.codeError.textContent = '';
+    openModal(els.formModal);
+  }
+
+  function detachReciprocalLinks(code, duplicateCodes) {
+    for (const d of duplicateCodes) {
+      const other = getQuestion(d);
+      if (other) other.duplicateCodes = other.duplicateCodes.filter(c => c !== code);
+    }
+  }
+  function attachReciprocalLinks(code, duplicateCodes) {
+    for (const d of duplicateCodes) {
+      const other = getQuestion(d);
+      if (other && !other.duplicateCodes.includes(code)) other.duplicateCodes.push(code);
+    }
+  }
+
+  function addQuestion(data) {
+    const q = sanitizeQuestion({ ...data, createdAt: data.createdAt || nowIso(), updatedAt: data.updatedAt || nowIso() });
+    if (!q.code) throw new Error('חסר קוד שאלה');
+    if (getQuestion(q.code)) throw new Error('כבר קיימת שאלה עם הקוד הזה');
+    questions.push(q);
+    attachReciprocalLinks(q.code, q.duplicateCodes);
+    ensureBidirectionalLinks();
+    saveData();
+    return q;
+  }
+
+  function editQuestion(oldCode, data) {
+    const q = getQuestion(oldCode); if (!q) throw new Error('השאלה לא נמצאה');
+    const newCode = cleanCode(data.code);
+    if (!newCode) throw new Error('חסר קוד שאלה');
+    const collision = getQuestion(newCode);
+    if (newCode !== oldCode && collision) throw new Error('כבר קיימת שאלה עם הקוד הזה');
+
+    const oldLinks = [...q.duplicateCodes];
+    detachReciprocalLinks(oldCode, oldLinks);
+    if (newCode !== oldCode) {
+      for (const other of questions) {
+        other.duplicateCodes = other.duplicateCodes.map(c => c === oldCode ? newCode : c);
+      }
+    }
+    q.code = newCode;
+    q.text = safeText(data.text).trim();
+    q.difficulty = Math.max(1, Math.min(10, Number(data.difficulty) || 5));
+    q.category = safeText(data.category).trim();
+    q.done = Boolean(data.done);
+    q.duplicateCodes = uniq((data.duplicateCodes || []).map(cleanCode).filter(Boolean).filter(c => c !== newCode));
+    q.notes = safeText(data.notes).trim();
+    q.updatedAt = nowIso();
+    attachReciprocalLinks(newCode, q.duplicateCodes);
+    ensureBidirectionalLinks();
+    saveData();
+    return q;
+  }
+
+  function deleteQuestion(code, skipConfirm = false) {
+    const q = getQuestion(code); if (!q) return false;
+    if (!skipConfirm && !confirm(`למחוק את שאלה #${q.code}? הפעולה תסיר גם קישורים אליה משאלות זהות.`)) return false;
+    questions = questions.filter(item => item.code !== q.code);
+    for (const other of questions) other.duplicateCodes = other.duplicateCodes.filter(c => c !== q.code);
+    saveData(); renderAll(); toast(`שאלה #${q.code} נמחקה`); return true;
+  }
+
+  function toggleDone(code) {
+    const q = getQuestion(code); if (!q) return;
+    q.done = !q.done; q.updatedAt = nowIso(); saveData(); renderAll();
+    toast(q.done ? `שאלה #${q.code} סומנה כבוצעה` : `הסימון הוסר משאלה #${q.code}`);
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault();
+    const code = cleanCode(els.qCode.value);
+    els.codeError.textContent = '';
+    if (!code) { els.codeError.textContent = 'יש להזין מספר או קוד שאלה.'; els.qCode.focus(); return; }
+    const duplicate = getQuestion(code);
+    if (duplicate && code !== editingCode) { els.codeError.textContent = 'כבר קיימת שאלה עם הקוד הזה.'; els.qCode.focus(); return; }
+    const data = {
+      code,
+      text: els.qText.value,
+      difficulty: Number(els.qDifficulty.value),
+      category: els.qCategory.value,
+      done: els.qDone.checked,
+      duplicateCodes: parseDuplicateCodes(els.qDuplicates.value, code),
+      notes: els.qNotes.value
+    };
+    try {
+      if (editingCode) { const old = editingCode; editQuestion(old, data); toast(`שאלה #${data.code} עודכנה`); }
+      else { addQuestion(data); toast(`שאלה #${data.code} נוספה`); }
+      closeModal(els.formModal); renderAll();
+    } catch (err) { els.codeError.textContent = err.message || 'אירעה שגיאה בשמירה.'; }
+  }
+
+  function showDetails(code) {
+    const q = getQuestion(code); if (!q) return;
+    detailCode = q.code;
+    const group = getDuplicateGroup(q.code);
+    const groupText = group.length ? group.map(x => `${x.code}${x.done ? ' ✓' : ''}${x.exists ? '' : ' (טרם נוסף)'}`).join(' ↔ ') : 'אין';
+    const siblingSolved = !q.done && group.some(x => x.exists && x.done);
+    els.detailTitle.textContent = `שאלה #${q.code}`;
+    els.detailContent.innerHTML = `
+      <div class="detail-grid">
+        <div class="detail-box"><div class="detail-label">סטטוס</div><div class="detail-value">${q.done ? '✓ בוצעה' : 'לא בוצעה'}${siblingSolved ? '<br><span style="color:var(--warning);font-weight:700">כבר נפתרה דרך קוד זהה</span>' : ''}</div></div>
+        <div class="detail-box"><div class="detail-label">רמת קושי</div><div class="detail-value difficulty ${difficultyClass(q.difficulty)}">${q.difficulty}/10</div></div>
+        <div class="detail-box full"><div class="detail-label">מה השאלה</div><div class="detail-value">${escapeHtml(q.text || 'ללא תיאור')}</div></div>
+        <div class="detail-box"><div class="detail-label">קטגוריה</div><div class="detail-value">${escapeHtml(q.category || 'ללא קטגוריה')}</div></div>
+        <div class="detail-box"><div class="detail-label">קבוצת שאלות זהות</div><div class="detail-value">${escapeHtml(groupText)}</div></div>
+        <div class="detail-box full"><div class="detail-label">הערות</div><div class="detail-value">${escapeHtml(q.notes || 'אין הערות')}</div></div>
+        <div class="detail-box"><div class="detail-label">נוספה</div><div class="detail-value">${escapeHtml(formatDate(q.createdAt))}</div></div>
+        <div class="detail-box"><div class="detail-label">עודכנה לאחרונה</div><div class="detail-value">${escapeHtml(formatDate(q.updatedAt))}</div></div>
+      </div>`;
+    openModal(els.detailModal);
+  }
+
+  function exportPayload() {
+    return { app: 'Interview Questions Tracker', version: 1, exportedAt: nowIso(), questions };
+  }
+  function exportData() {
+    const payload = exportPayload();
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `interview-questions-backup-${new Date().toISOString().slice(0,10)}.json`;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+    toast('הגיבוי הורד כקובץ JSON');
+  }
+
+  function parseImportText(text) {
+    const parsed = JSON.parse(text);
+    const list = Array.isArray(parsed) ? parsed : parsed?.questions;
+    if (!Array.isArray(list)) throw new Error('הקובץ אינו מכיל רשימת שאלות תקינה.');
+    const cleaned = list.map(sanitizeQuestion);
+    if (cleaned.some(q => !q.code)) throw new Error('נמצאה שאלה ללא קוד.');
+    const codes = cleaned.map(q => q.code);
+    if (new Set(codes).size !== codes.length) throw new Error('בקובץ יש קודי שאלות כפולים.');
+    return cleaned;
+  }
+  function replaceWithImported(list) {
+    questions = list.map(sanitizeQuestion);
+    ensureBidirectionalLinks();
+    saveData(); renderAll();
+  }
+  async function importData(file) {
+    try {
+      const text = await file.text();
+      const imported = parseImportText(text);
+      if (questions.length && !confirm(`הייבוא יחליף את ${questions.length} השאלות הקיימות ב-${imported.length} שאלות מהגיבוי. להמשיך?`)) return;
+      replaceWithImported(imported);
+      toast(`הייבוא הושלם: ${imported.length} שאלות נטענו`);
+    } catch (err) {
+      console.error(err); toast(err.message || 'לא ניתן לייבא את הקובץ.', 'error');
+    } finally { els.importFile.value = ''; }
+  }
+
+  function clearFilters() {
+    els.searchInput.value = '';
+    els.statusFilter.value = 'all';
+    els.difficultyFilter.value = 'all';
+    els.categoryFilter.value = 'all';
+    els.sortSelect.value = 'code-asc';
+    els.duplicatesOnly.checked = false;
+    renderQuestions();
+  }
+
+  function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    const dark = theme === 'dark';
+    els.themeBtn.textContent = dark ? '☀️' : '🌙';
+    els.themeBtn.title = dark ? 'מצב בהיר' : 'מצב כהה';
+    els.themeBtn.setAttribute('aria-label', dark ? 'מעבר למצב בהיר' : 'מעבר למצב כהה');
+  }
+  function initTheme() {
+    const saved = localStorage.getItem(THEME_KEY);
+    const theme = saved === 'dark' || saved === 'light' ? saved : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    applyTheme(theme);
+  }
+
+  function bindEvents() {
+    els.addBtn.addEventListener('click', openAddForm);
+    els.questionForm.addEventListener('submit', handleSubmit);
+    els.exportBtn.addEventListener('click', exportData);
+    els.importBtn.addEventListener('click', () => els.importFile.click());
+    els.importFile.addEventListener('change', () => { const file = els.importFile.files?.[0]; if (file) importData(file); });
+    els.cloudBtn.addEventListener('click', () => { updateAuthUI(); openModal(els.authModal); });
+    els.loginBtn.addEventListener('click', signIn);
+    els.signupBtn.addEventListener('click', signUp);
+    els.resetBtn.addEventListener('click', sendPasswordReset);
+    els.syncNowBtn.addEventListener('click', () => syncWithCloud({ forcePull: false }));
+    els.showPasswordChangeBtn.addEventListener('click', () => {
+      els.passwordChangeArea.hidden = !els.passwordChangeArea.hidden;
+      if (!els.passwordChangeArea.hidden) setTimeout(() => els.newPassword.focus(), 20);
+    });
+    els.changePasswordBtn.addEventListener('click', changePassword);
+    els.logoutBtn.addEventListener('click', signOut);
+    els.authPassword.addEventListener('keydown', (e) => { if (e.key === 'Enter') signIn(); });
+    els.themeBtn.addEventListener('click', () => { const next = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; localStorage.setItem(THEME_KEY, next); applyTheme(next); });
+    [els.searchInput, els.statusFilter, els.difficultyFilter, els.categoryFilter, els.sortSelect, els.duplicatesOnly].forEach(el => el.addEventListener(el === els.searchInput ? 'input' : 'change', renderQuestions));
+    els.clearFiltersBtn.addEventListener('click', clearFilters);
+
+    document.addEventListener('click', (e) => {
+      const close = e.target.closest('[data-close]'); if (close) { closeModal($(close.dataset.close)); return; }
+      if (e.target.classList.contains('modal-backdrop')) closeModal(e.target);
+      const actionEl = e.target.closest('[data-action]'); if (!actionEl) return;
+      const { action, code } = actionEl.dataset;
+      if (action === 'toggle') toggleDone(code);
+      else if (action === 'edit') openEditForm(code);
+      else if (action === 'delete') deleteQuestion(code);
+      else if (action === 'details') showDetails(code);
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { closeModal(els.formModal); closeModal(els.detailModal); closeModal(els.authModal); }
+      if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('[data-action="details"]')) { e.preventDefault(); showDetails(e.target.dataset.code); }
+    });
+    els.detailEditBtn.addEventListener('click', () => { const code = detailCode; closeModal(els.detailModal); if (code) openEditForm(code); });
+  }
+
+  function initDifficulty() {
+    els.qDifficulty.innerHTML = Array.from({length:10}, (_,i) => `<option value="${i+1}">${i+1}${i===0?' — קל מאוד':i===9?' — קשה מאוד':''}</option>`).join('');
+    els.qDifficulty.value = '5';
+  }
+
+  async function init() {
+    initTheme();
+    initDifficulty();
+    questions = loadData();
+    ensureBidirectionalLinks();
+    bindEvents();
+    renderAll();
+    updateAuthUI();
+    if (location.hash !== '#selftest') await initCloud();
+  }
+
+  // API קטן לבדיקות אוטומטיות. אינו משפיע על השימוש הרגיל באתר.
+  window.InterviewTrackerTestAPI = {
+    getQuestions: () => JSON.parse(JSON.stringify(questions)),
+    setQuestions: (list) => { questions = list.map(sanitizeQuestion); ensureBidirectionalLinks(); saveData(); renderAll(); },
+    addQuestion, editQuestion, deleteQuestion: (code) => deleteQuestion(code, true), toggleDone,
+    getDuplicateGroup, getVisibleQuestions, exportPayload, parseImportText, replaceWithImported,
+    storageKey: STORAGE_KEY
+  };
+
+  async function runSelfTestIfRequested() {
+    if (location.hash !== '#selftest') return;
+    const api = window.InterviewTrackerTestAPI;
+    const results = [];
+    const assert = (name, condition, detail='') => results.push({ name, pass: Boolean(condition), detail: condition ? '' : detail });
+    try {
+      api.setQuestions([]);
+      api.addQuestion({code:'93', text:'XOR Tri-State', difficulty:7, category:'לוגיקה ספרתית', done:false, duplicateCodes:['127'], notes:'Priority Encoder'});
+      assert('1. הוספת שאלה', api.getQuestions().length === 1 && api.getQuestions()[0].code === '93');
+
+      api.editQuestion('93', {code:'93', text:'XOR מעודכן', difficulty:8, category:'לוגיקה ספרתית', done:false, duplicateCodes:['127'], notes:'עודכן'});
+      assert('2. עריכת שאלה', api.getQuestions()[0].text === 'XOR מעודכן' && api.getQuestions()[0].difficulty === 8);
+
+      api.toggleDone('93');
+      assert('4. סימון כבוצעה', api.getQuestions()[0].done === true);
+
+      api.addQuestion({code:'127', text:'אותה שאלה', difficulty:5, category:'Verilog', done:false, duplicateCodes:[], notes:''});
+      const q127 = api.getQuestions().find(q=>q.code==='127');
+      assert('7. קישור דו-כיווני', q127.duplicateCodes.includes('93') && api.getDuplicateGroup('127').some(x=>x.code==='93'));
+
+      els.searchInput.value = '127'; renderQuestions();
+      assert('5. חיפוש לפי קוד זהה', api.getVisibleQuestions().some(q=>q.code==='93'));
+      els.searchInput.value = '';
+
+      els.statusFilter.value = 'done';
+      assert('6. סינון לפי סטטוס', api.getVisibleQuestions().length === 1 && api.getVisibleQuestions()[0].code === '93');
+      els.statusFilter.value = 'all';
+
+      const stored = JSON.parse(localStorage.getItem(api.storageKey));
+      assert('8. שמירה ב-localStorage', stored.questions.some(q=>q.code==='93') && stored.questions.some(q=>q.code==='127'));
+
+      const exported = JSON.stringify(api.exportPayload());
+      const parsed = api.parseImportText(exported);
+      assert('9. ייצוא JSON', parsed.length === 2 && parsed.some(q=>q.code==='93'));
+
+      api.replaceWithImported([{code:'500', text:'Imported', difficulty:3, category:'FSM', done:false, duplicateCodes:[], notes:''}]);
+      assert('10. ייבוא JSON', api.getQuestions().length === 1 && api.getQuestions()[0].code === '500');
+
+      api.addQuestion({code:'501', text:'Delete me', difficulty:2, category:'FSM', done:false, duplicateCodes:['500'], notes:''});
+      api.deleteQuestion('501');
+      const afterDelete = api.getQuestions();
+      assert('3. מחיקת שאלה וניקוי קישור', !afterDelete.some(q=>q.code==='501') && !afterDelete.find(q=>q.code==='500').duplicateCodes.includes('501'));
+    } catch (err) {
+      results.push({name:'שגיאת בדיקה', pass:false, detail:String(err?.stack || err)});
+    }
+    const passed = results.filter(r=>r.pass).length;
+    document.body.innerHTML = `<pre id="selftest-result">${escapeHtml(JSON.stringify({passed,total:results.length,results},null,2))}</pre>`;
+    document.title = passed === results.length ? 'SELFTEST PASS' : 'SELFTEST FAIL';
+  }
+
+  init().then(runSelfTestIfRequested).catch(err => {
+    console.error('Initialization failed', err);
+    setCloudStatus('error', 'שגיאת אתחול');
+  });
+})();
+</script>
+</body>
+</html>
